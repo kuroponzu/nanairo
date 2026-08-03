@@ -55,6 +55,17 @@ src/
 ├ lib/color.ts          sRGB / リニアRGB / Lab 変換、CIEDE2000
 ├ lib/mix.ts            混色エンジン（spectral.js）
 ├ lib/reverse.ts        逆引き全探索
-├ lib/nearest.ts        結果に最も近い24色、文字色の自動判定
+├ lib/nearest.ts        結果に最も近い24色、近さの区分、文字色の自動判定
+├ lib/selection.ts      「まぜる」の選択状態と、逆引き候補からの変換
 └ components/           ColorGrid / ColorPickerSheet / MixPanel / ReversePanel
 ```
+
+## テスト
+
+```sh
+npm test
+```
+
+色の計算（`lib/`）は node 環境で回す。DOM が必要なコンポーネントのテストは
+`*.dom.test.tsx` に置き、ファイル先頭の `@vitest-environment jsdom` で
+個別に指定している（色の計算だけのテストに jsdom の起動コストを掛けないため）。

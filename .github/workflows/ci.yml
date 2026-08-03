@@ -1,0 +1,22 @@
+name: CI
+
+# デプロイは main への push だけなので、それ以外の変更が壊れていないかを
+# ここで確かめる。main でも走らせておくとデプロイ前に結果が分かる
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
