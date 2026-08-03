@@ -12,10 +12,17 @@ import { deltaE2000, hexToLab } from './color'
 import { mixColors } from './mix'
 import { PALETTE, type PaletteColor } from '../data/palette'
 
+/** 混ぜる材料1色ぶん。ratio は最も簡単な整数比に約分済み */
+export type RecipePart = { color: PaletteColor; ratio: number }
+
 /** 逆引きの候補1件 */
 export type Recipe = {
-  /** 混ぜる色（2色以上）。ratio は最も簡単な整数比に約分済み */
-  parts: { color: PaletteColor; ratio: number }[]
+  /**
+   * 混ぜる色。探索は2色に固定しているのでタプルで表す。
+   * 「まぜる」タブが2色ぶんのスロットしか持たないため、
+   * ここを配列にすると3色目が静かに捨てられる形になってしまう。
+   */
+  parts: [RecipePart, RecipePart]
   /** 混ぜた結果の色 */
   resultHex: string
   /** 目標色との色差（小さいほど近い） */
@@ -79,16 +86,6 @@ export function findRecipes(
 
   candidates.sort((x, y) => x.deltaE - y.deltaE)
   return candidates.slice(0, limit)
-}
-
-/** 色差から「どれくらい近いか」の区分を返す。画面での言い回しに使う */
-export type Closeness = 'almost' | 'close' | 'similar' | 'far'
-
-export function closenessOf(deltaE: number): Closeness {
-  if (deltaE < 3) return 'almost'
-  if (deltaE < 8) return 'close'
-  if (deltaE < 16) return 'similar'
-  return 'far'
 }
 
 /** 比を最も簡単な整数比に約分する（4:8 → 1:2） */

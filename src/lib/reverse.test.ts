@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { closenessOf, findRecipes } from './reverse'
+import { findRecipes } from './reverse'
 import { mixColors } from './mix'
 import { PALETTE, findColor } from '../data/palette'
 
@@ -157,25 +157,31 @@ describe('むらさきの作り方が妥当に提案される', () => {
 
 describe('原色の扱い', () => {
   it('原色は混ぜても作れないので、その印が付いている', () => {
-    // 減法混色の原色（黄・赤紫・青緑）と、赤・青・白・黒
-    const expected = [
-      'kiiro',
-      'aka',
-      'akamurasaki',
-      'ao',
-      'aomidori',
-      'shiro',
-      'kuro',
-    ]
+    // 減法混色の原色（黄・赤紫・青緑）と、混色では作れない白・黒
+    const expected = ['kiiro', 'akamurasaki', 'aomidori', 'shiro', 'kuro']
     const marked = PALETTE.filter((c) => c.primary).map((c) => c.id)
     expect(marked.sort()).toEqual(expected.sort())
   })
 
+  it('あか・あおは日常では原色と呼ばれるが印は付けない', () => {
+    // 減法混色の原色ではないので、他の色から実際にかなり近い色が作れる。
+    // ここで印を付けると「つくれません」の直下に「そっくりな いろ」の
+    // 候補が並んで矛盾するため、あえて外している。
+    for (const id of ['aka', 'ao']) {
+      const target = PALETTE.find((c) => c.id === id)!
+      expect(target.primary, target.name).toBeUndefined()
+
+      const recipes = findRecipes(target.hex, { excludeIds: [target.id] })
+      // 「かなり ちかい いろ」以上に近づけられる
+      expect(recipes[0].deltaE, target.name).toBeLessThan(8)
+    }
+  })
+
   it('原色は他の色をどう混ぜても十分に近づけられない', () => {
-    // 「作れない」と表示する根拠。ΔE 2 未満まで近づける組合せは存在しない
+    // 「作れない」と表示する根拠。ΔE 5 未満まで近づける組合せは存在しない
     for (const target of PALETTE.filter((c) => c.primary)) {
       const recipes = findRecipes(target.hex, { excludeIds: [target.id] })
-      expect(recipes[0].deltaE, target.name).toBeGreaterThan(2)
+      expect(recipes[0].deltaE, target.name).toBeGreaterThan(5)
     }
   })
 
@@ -184,18 +190,5 @@ describe('原色の扱い', () => {
       const recipes = findRecipes(target.hex, { excludeIds: [target.id] })
       expect(recipes[0].deltaE, target.name).toBeLessThan(16)
     }
-  })
-})
-
-describe('closenessOf', () => {
-  it('色差に応じた区分を返す', () => {
-    expect(closenessOf(0)).toBe('almost')
-    expect(closenessOf(2.9)).toBe('almost')
-    expect(closenessOf(3)).toBe('close')
-    expect(closenessOf(7.9)).toBe('close')
-    expect(closenessOf(8)).toBe('similar')
-    expect(closenessOf(15.9)).toBe('similar')
-    expect(closenessOf(16)).toBe('far')
-    expect(closenessOf(100)).toBe('far')
   })
 })

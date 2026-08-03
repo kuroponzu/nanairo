@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PALETTE, type PaletteColor } from '../data/palette'
-import { closenessOf, findRecipes, type Recipe } from '../lib/reverse'
-import { textColorOn } from '../lib/nearest'
+import { findRecipes, type Recipe } from '../lib/reverse'
+import { closenessOf, textColorOn } from '../lib/nearest'
 import { ColorPickerSheet } from './ColorPickerSheet'
 
 /** 色差の区分ごとの言い回し。子供に読み上げられるようにひらがな中心 */

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PALETTE, type PaletteColor } from '../data/palette'
 import { mixColors } from '../lib/mix'
-import { nearestColor, textColorOn } from '../lib/nearest'
+import { closenessOf, nearestColor, textColorOn } from '../lib/nearest'
 import { ColorPickerSheet } from './ColorPickerSheet'
 
 export type MixSelection = {
@@ -34,9 +34,17 @@ export function MixPanel({ selection, onChange }: Props) {
   )
 
   const nearest = useMemo(() => nearestColor(result), [result])
-  /** 結果が材料そのままに近いときは「〜に近い」と言っても意味がないので出さない */
+  /**
+   * 「〜っぽいいろ」と名前で言えるのは次の両方を満たすときだけ。
+   * - 結果が材料そのままに近くない（「あお＋しろ＝あおっぽい」では何も言っていない）
+   * - 実際に名前で呼べるくらい近い。閾値を置かないと ΔE 20 超の色にも
+   *   名前を付けてしまい（例：あお2：うすだいだい8 が「しろっぽいいろ」）、
+   *   実物と見比べる子供に嘘を教えることになる
+   */
   const showNearest =
-    nearest.color.id !== colorA.id && nearest.color.id !== colorB.id
+    nearest.color.id !== colorA.id &&
+    nearest.color.id !== colorB.id &&
+    closenessOf(nearest.deltaE) !== 'far'
 
   return (
     <div className="flex flex-col gap-5">
