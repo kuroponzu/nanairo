@@ -12,6 +12,16 @@
       content="色鉛筆や絵の具の色を混ぜたらどうなるか、この色を作るには何色を混ぜればいいかを調べるアプリ"
     />
     <title>なないろ — いろをまぜてしらべる</title>
+
+    <!-- ホーム画面に追加してアプリのように使えるようにする -->
+    <link rel="manifest" href="/nanairo/manifest.webmanifest" />
+    <meta name="theme-color" content="#f5f5f4" />
+    <!-- iOS は manifest を見ないので、アイコンと表示モードを個別に指定する -->
+    <link rel="apple-touch-icon" href="/nanairo/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="なないろ" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
   </head>
   <body>
     <div id="root"></div>

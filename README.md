@@ -1,32 +1,58 @@
-# React + TypeScript + Vite
+# なないろ
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+色鉛筆や絵の具の色を混ぜたらどうなるか、逆にこの色を作るには何色を混ぜればいいかを調べるアプリ。
 
-Currently, two official plugins are available:
+**https://kuroponzu.github.io/nanairo/**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+子供と絵を描いていて「むらさきって何色と何色を混ぜたら作れるの？」「この色とこの色を混ぜたら何色になるの？」と聞かれても答えられなかったので作った。スマホで開いて机の上で使うことを前提にしている。
 
-## React Compiler
+## できること
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **まぜる**（順引き）— 24色から2色と混ぜる割合を選ぶと、混ざった色が出る
+- **つくる**（逆引き）— 目標の色を選ぶと「◯◯ ＋ ◯◯ を 2:1 で」という候補が近い順に出る。候補をタップすると「まぜる」に持ち込める
 
-## Expanding the Oxlint configuration
+原色（きいろ・あか・あかむらさき・あお・あおみどり・しろ・くろ）は他の色を混ぜても作れないので、その場合は正直にそう表示する。
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## 混色の計算
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+RGB を単純に平均すると「あお＋きいろ＝ねずみいろ」になってしまい実物と全く合わない。絵の具は減法混色なので、[spectral.js](https://github.com/rvanwijnen/spectral.js)（MIT）を使って hex から 380〜750nm の分光反射率を復元し、Kubelka-Munk 理論で混ぜている。
+
+自前で書いた3チャンネル（RGB）版の Kubelka-Munk も試したが、**原理的に「あか＋あお＝むらさき」を再現できない**ので捨てた。sRGB のあかは G,B がほぼ 0、あおは R,G がほぼ 0 なので、混ぜると全チャンネルが 0 に落ちて黒くなる。実物のあかの顔料は紫の波長（400〜430nm）を反射していて、それがあおと混ざったときに残るのだが、その情報は3チャンネルには存在しない。組合せごとの補正テーブルで直せる類の問題ではなかった。
+
+逆引きは全探索。24色から2色を選ぶ 276 通り × 割合9段階 = 2,484 パターンを実際に混ぜて、CIEDE2000 の色差で近い順に並べているだけ。順引きと同じ関数を通しているので、提案された組合せを「まぜる」で試すと必ず同じ色になる（テストで検証している）。
+
+## 実物とズレていたとき
+
+`src/data/corrections.ts` に色ごとの着色力（`TINT_STRENGTH`）を書ける。1 より大きくすると「少量でも強く出る色」として扱われる。今は補正なしで運用しており、実際の色鉛筆と見比べてズレに気づいたときに値を足していく想定。
+
+混ぜた結果の hex を直接上書きする方式にしなかったのは、スライダーを動かしたときに色が飛ぶし、A+B と B+A で結果が変わりうるため。
+
+## 開発
+
+```sh
+npm install
+npm run dev      # http://localhost:5173/nanairo/
+npm test         # 混色・逆引きの性質テスト
+npm run build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+アイコンは `public/favicon.svg` が本体。iOS 用の PNG は SVG 変換ツール無しで生成できるよう自前スクリプトを置いている（デザインを変えたら SVG と両方直すこと）。
+
+```sh
+node scripts/generate-icons.mjs
+```
+
+`main` に push すると GitHub Actions で Pages にデプロイされる。
+
+## 構成
+
+```
+src/
+├ data/palette.ts       24色の定義（和名・hex・原色フラグ）
+├ data/corrections.ts   着色力の補正
+├ lib/color.ts          sRGB / リニアRGB / Lab 変換、CIEDE2000
+├ lib/mix.ts            混色エンジン（spectral.js）
+├ lib/reverse.ts        逆引き全探索
+├ lib/nearest.ts        結果に最も近い24色、文字色の自動判定
+└ components/           ColorGrid / ColorPickerSheet / MixPanel / ReversePanel
+```
