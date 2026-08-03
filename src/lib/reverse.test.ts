@@ -155,6 +155,38 @@ describe('むらさきの作り方が妥当に提案される', () => {
   })
 })
 
+describe('原色の扱い', () => {
+  it('原色は混ぜても作れないので、その印が付いている', () => {
+    // 減法混色の原色（黄・赤紫・青緑）と、赤・青・白・黒
+    const expected = [
+      'kiiro',
+      'aka',
+      'akamurasaki',
+      'ao',
+      'aomidori',
+      'shiro',
+      'kuro',
+    ]
+    const marked = PALETTE.filter((c) => c.primary).map((c) => c.id)
+    expect(marked.sort()).toEqual(expected.sort())
+  })
+
+  it('原色は他の色をどう混ぜても十分に近づけられない', () => {
+    // 「作れない」と表示する根拠。ΔE 2 未満まで近づける組合せは存在しない
+    for (const target of PALETTE.filter((c) => c.primary)) {
+      const recipes = findRecipes(target.hex, { excludeIds: [target.id] })
+      expect(recipes[0].deltaE, target.name).toBeGreaterThan(2)
+    }
+  })
+
+  it('原色でない色は、そこそこ近い組合せが見つかる', () => {
+    for (const target of PALETTE.filter((c) => !c.primary)) {
+      const recipes = findRecipes(target.hex, { excludeIds: [target.id] })
+      expect(recipes[0].deltaE, target.name).toBeLessThan(16)
+    }
+  })
+})
+
 describe('closenessOf', () => {
   it('色差に応じた区分を返す', () => {
     expect(closenessOf(0)).toBe('almost')

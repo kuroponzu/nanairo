@@ -10,3 +10,54 @@ body {
   /* スマホでの縦バウンスを抑えてアプリらしい操作感にする */
   overscroll-behavior-y: none;
 }
+
+/*
+ * 混合比のスライダー。
+ * トラックを2色のグラデーションにして「どちらに寄せているか」を色で見せる。
+ * ブラウザ既定のトラックが背景の上に描かれてしまうので appearance を切り、
+ * 背景（グラデーション）は要素側の style で指定している。
+ */
+.ratio-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* 帯は要素の高さいっぱいではなく中央の細い帯にする */
+  background-size: 100% 1.25rem;
+  border-radius: 9999px;
+}
+
+.ratio-slider::-webkit-slider-runnable-track {
+  height: 1.25rem;
+  background: transparent;
+  border-radius: 9999px;
+}
+
+.ratio-slider::-moz-range-track {
+  height: 1.25rem;
+  background: transparent;
+  border-radius: 9999px;
+}
+
+/* つまみはどんな色の上でも見えるよう、白丸＋濃い輪郭にする */
+.ratio-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.25rem;
+  background: #fff;
+  border: 3px solid #44403c;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+.ratio-slider::-moz-range-thumb {
+  width: 1.75rem;
+  height: 1.75rem;
+  background: #fff;
+  border: 3px solid #44403c;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
