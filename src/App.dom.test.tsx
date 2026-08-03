@@ -79,15 +79,31 @@ describe('色を選び直す', () => {
   })
 
   it('結果が材料そのものに近いときは色名を出さない', async () => {
-    // あか5：きいろ5 は最近色が材料の「あか」自身になる。
+    // あか9：きいろ1 は最近色が材料の「あか」自身になる。
     // 「あかっぽいいろ」と言っても何も説明していないので出さない
     render(<App />)
     await userEvent.click(screen.getByRole('button', { name: /1つめ/ }))
     await userEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'あか' }),
     )
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '9' } })
+
     expect(screen.getByText('こんないろ')).toBeTruthy()
     expect(screen.queryByText(/っぽいいろ/)).toBeNull()
+  })
+
+  it('あか + あお で むらさき系の名前が出る', async () => {
+    // サクラクレパスの解説どおり「赤＋青＝暗めの紫」になること
+    render(<App />)
+    await userEvent.click(screen.getByRole('button', { name: /2つめ/ }))
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'あか' }),
+    )
+    expect(
+      screen.getByText(
+        /むらさき っぽいいろ|あおむらさき っぽいいろ|あかむらさき っぽいいろ/,
+      ),
+    ).toBeTruthy()
   })
 
   it('きいろを多くすると だいだい系の名前が出る', async () => {

@@ -36,7 +36,11 @@ export const PALETTE: PaletteColor[] = [
   { id: 'daidai', name: 'だいだいいろ', hex: '#F08300' },
   { id: 'shu', name: 'しゅいろ', hex: '#EB6101' },
   // 赤・桃系
-  { id: 'aka', name: 'あか', hex: '#E60012' },
+  // JIS の赤 #E60012 は朱色寄り（Lab 色相 37°）で、あお と混ぜても
+  // 色相が 359° に留まり紫にならない。学童用絵の具では「あか＋あお＝
+  // 暗めの紫」が成り立つ必要があるため、境目の 28° より内側にある
+  // クリムソン寄りの値を採る（mix.test.ts で色相を固定している）
+  { id: 'aka', name: 'あか', hex: '#D7003A' },
   { id: 'momo', name: 'ももいろ', hex: '#F8B0C0' },
   { id: 'usudaidai', name: 'うすだいだい', hex: '#FBD5B5' },
   { id: 'oudo', name: 'おうどいろ', hex: '#C7A252' },

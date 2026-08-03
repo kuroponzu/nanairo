@@ -97,14 +97,64 @@ describe('絵の具として正しい混色になっている', () => {
     expect(h).toBeLessThan(170)
   })
 
+  it('あか + あお = むらさき（暗めの紫）', () => {
+    // https://www.craypas.co.jp/press/feature/009/sa_pre_0245.html
+    // 「紫色の作り方は赤色＋青色。赤色1：青色1で紫色（暗めの紫色）」
+    //
+    // ここは あか の hex 選びが直接効く。朱色寄りの #E60012（色相 37°）だと
+    // 混色の色相が 359° に留まって黒っぽい赤茶になり、紫に届かなかった。
+    // 元の赤の色相が 28° より内側でないと紫にならない
+    // パレットの むらさき(288°) と あおむらさき(251°)〜あかむらさき(313°) の
+    // あいだに入っていれば紫と呼べる
+    const mixed = mixColors([c('aka'), c('ao')])
+    expect(hue(mixed)).toBeGreaterThan(255)
+    expect(hue(mixed)).toBeLessThan(320)
+    // 「暗めの」紫であること
+    expect(hexToLab(mixed).l).toBeLessThan(40)
+  })
+
+  it('あか + あお は、赤を増やすと赤紫・青を増やすと青紫になる', () => {
+    // サイトの「赤色の比率が高くなれば赤紫色に、青色の比率が高くなれば青紫色に」
+    const reddish = mixColors([{ ...c('aka'), weight: 7 }, { ...c('ao'), weight: 3 }])
+    const bluish = mixColors([{ ...c('aka'), weight: 3 }, { ...c('ao'), weight: 7 }])
+    // 赤寄りは あかむらさき に、青寄りは あおむらさき に近いことで確かめる
+    // （色相角は 360° を跨ぐので大小比較には使えない）
+    const near = (hex: string, id: string) =>
+      deltaE2000(hexToLab(hex), hexToLab(findColor(id)!.hex))
+    expect(near(reddish, 'akamurasaki')).toBeLessThan(near(reddish, 'aomurasaki'))
+    expect(near(bluish, 'aomurasaki')).toBeLessThan(near(bluish, 'akamurasaki'))
+  })
+
+  it('あか + あお で作った紫は、パレットの むらさき に近い', () => {
+    const mixed = mixColors([c('aka'), c('ao')])
+    const dE = deltaE2000(hexToLab(findColor('murasaki')!.hex), hexToLab(mixed))
+    // 混色で作った紫はチューブの紫ほど鮮やかにならないので完全一致はしない。
+    // それでも「にている いろ」の範囲には入る
+    expect(dE).toBeLessThan(16)
+  })
+
   it('あお + きいろ は灰色にならない', () => {
     expect(chroma(mixColors([c('ao'), c('kiiro')]))).toBeGreaterThan(30)
   })
 
-  it('あか + きいろ = だいだい', () => {
-    const h = hue(mixColors([c('aka'), c('kiiro')]))
-    expect(h).toBeGreaterThan(8)
-    expect(h).toBeLessThan(55)
+  it('あか + きいろ = だいだい（サクラクレパスの言う「赤1：黄2」）', () => {
+    // https://www.craypas.co.jp/press/feature/009/sa_pre_0245.html
+    // 「オレンジ色の作り方は赤色1：黄色2」。あか は紫を作るために
+    // マゼンタ寄りにしてあるので、1:1 ではまだ赤寄りで橙にならない
+    const h = hue(mixColors([{ ...c('aka'), weight: 1 }, { ...c('kiiro'), weight: 2 }]))
+    // 赤(0°付近)から黄(60°付近)へ向かう途中の橙
+    expect(h).toBeGreaterThan(10)
+    expect(h).toBeLessThan(45)
+  })
+
+  it('あか + きいろ は、黄を増やすほど橙へ寄っていく', () => {
+    // 途中の比率でも色相が単調に橙へ動くこと（表示が飛ばないための性質）
+    const hues = [1, 2, 3, 4].map((w) =>
+      hue(mixColors([{ ...c('aka'), weight: 1 }, { ...c('kiiro'), weight: w }])),
+    )
+    for (let i = 1; i < hues.length; i++) {
+      expect(hues[i]).toBeGreaterThan(hues[i - 1])
+    }
   })
 
   it('あかむらさき + あお = むらさき〜あおむらさき', () => {
