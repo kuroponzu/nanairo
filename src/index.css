@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+html {
+  /* iOS Safari で横向きにしたときの意図しない文字サイズ変更を抑える */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  /* スマホでの縦バウンスを抑えてアプリらしい操作感にする */
+  overscroll-behavior-y: none;
+}
