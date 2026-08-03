@@ -177,11 +177,18 @@ describe('原色の扱い', () => {
     }
   })
 
-  it('原色は他の色をどう混ぜても十分に近づけられない', () => {
-    // 「作れない」と表示する根拠。ΔE 5 未満まで近づける組合せは存在しない
+  it('原色は他の色をどう混ぜても、そっくりには作れない', () => {
+    // 「作れない」と表示する根拠。ΔE 3 未満（closenessOf が almost）まで
+    // 近づける組合せは存在しないので、「そっくりな いろ」の候補が
+    // 「つくれません」の直下に並ぶことはない。
+    //
+    // あか をマゼンタ寄りにした結果、あかむらさき は あか＋みずいろ で
+    // ΔE 5 弱まで近づく。原色そのものが混色で作れないという事実は
+    // 変わらないので印は残し、画面には「いちばん ちかづけられるのは
+    // つぎの くみあわせです」と添えて候補を見せている
     for (const target of PALETTE.filter((c) => c.primary)) {
       const recipes = findRecipes(target.hex, { excludeIds: [target.id] })
-      expect(recipes[0].deltaE, target.name).toBeGreaterThan(5)
+      expect(recipes[0].deltaE, target.name).toBeGreaterThan(3)
     }
   })
 
