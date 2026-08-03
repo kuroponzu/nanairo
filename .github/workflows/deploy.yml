@@ -26,6 +26,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       # 混色や逆引きが壊れた状態で公開されないよう、デプロイ前にテストを通す
       - run: npm test
       - run: npm run build

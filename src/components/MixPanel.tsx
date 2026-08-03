@@ -1,15 +1,9 @@
 import { useMemo, useState } from 'react'
-import { PALETTE, type PaletteColor } from '../data/palette'
+import type { PaletteColor } from '../data/palette'
 import { mixColors } from '../lib/mix'
-import { nearestColor, textColorOn } from '../lib/nearest'
+import { closenessOf, nearestColor, textColorOn } from '../lib/nearest'
+import { WEIGHT_TOTAL, type MixSelection } from '../lib/selection'
 import { ColorPickerSheet } from './ColorPickerSheet'
-
-export type MixSelection = {
-  colorA: PaletteColor
-  colorB: PaletteColor
-  /** A の割合（1〜9）。B は 10 - weightA */
-  weightA: number
-}
 
 type Props = {
   selection: MixSelection
@@ -22,7 +16,7 @@ type Props = {
 export function MixPanel({ selection, onChange }: Props) {
   const [picking, setPicking] = useState<'a' | 'b' | null>(null)
   const { colorA, colorB, weightA } = selection
-  const weightB = 10 - weightA
+  const weightB = WEIGHT_TOTAL - weightA
 
   const result = useMemo(
     () =>
@@ -34,9 +28,17 @@ export function MixPanel({ selection, onChange }: Props) {
   )
 
   const nearest = useMemo(() => nearestColor(result), [result])
-  /** 結果が材料そのままに近いときは「〜に近い」と言っても意味がないので出さない */
+  /**
+   * 「〜っぽいいろ」と名前で言えるのは次の両方を満たすときだけ。
+   * - 結果が材料そのままに近くない（「あお＋しろ＝あおっぽい」では何も言っていない）
+   * - 実際に名前で呼べるくらい近い。閾値を置かないと ΔE 20 超の色にも
+   *   名前を付けてしまい（例：あお2：うすだいだい8 が「しろっぽいいろ」）、
+   *   実物と見比べる子供に嘘を教えることになる
+   */
   const showNearest =
-    nearest.color.id !== colorA.id && nearest.color.id !== colorB.id
+    nearest.color.id !== colorA.id &&
+    nearest.color.id !== colorB.id &&
+    closenessOf(nearest.deltaE) !== 'far'
 
   return (
     <div className="flex flex-col gap-5">
@@ -76,7 +78,7 @@ export function MixPanel({ selection, onChange }: Props) {
           <input
             type="range"
             min={1}
-            max={9}
+            max={WEIGHT_TOTAL - 1}
             step={1}
             value={weightA}
             onChange={(e) =>
@@ -162,11 +164,4 @@ function ColorSlot({
       </span>
     </button>
   )
-}
-
-/** 初期表示。青と黄を混ぜると緑になるのがこのアプリの一番の見どころなので最初に見せる */
-export const DEFAULT_SELECTION: MixSelection = {
-  colorA: PALETTE.find((c) => c.id === 'ao')!,
-  colorB: PALETTE.find((c) => c.id === 'kiiro')!,
-  weightA: 5,
 }

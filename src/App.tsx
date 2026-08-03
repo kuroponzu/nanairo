@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import {
-  DEFAULT_SELECTION,
-  MixPanel,
-  type MixSelection,
-} from './components/MixPanel'
+import { MixPanel } from './components/MixPanel'
 import { ReversePanel } from './components/ReversePanel'
 import type { Recipe } from './lib/reverse'
+import {
+  DEFAULT_SELECTION,
+  selectionFromRecipe,
+  type MixSelection,
+} from './lib/selection'
 
 type Tab = 'mix' | 'reverse'
 
@@ -15,14 +16,7 @@ export default function App() {
 
   /** 「つくる」タブの候補をタップしたら、その組合せで「まぜる」タブを開く */
   const tryRecipe = (recipe: Recipe) => {
-    const [a, b] = recipe.parts
-    const total = a.ratio + b.ratio
-    setSelection({
-      colorA: a.color,
-      colorB: b.color,
-      // スライダーは 1〜9 の目盛りなので、比率をその範囲に写す
-      weightA: Math.min(9, Math.max(1, Math.round((a.ratio / total) * 10))),
-    })
+    setSelection(selectionFromRecipe(recipe))
     setTab('mix')
     window.scrollTo({ top: 0 })
   }
@@ -43,6 +37,7 @@ export default function App() {
           className="mx-auto flex max-w-lg gap-1 rounded-full bg-stone-200 p-1"
         >
           <TabButton
+            id="tab-mix"
             active={tab === 'mix'}
             onClick={() => setTab('mix')}
             controls="panel-mix"
@@ -50,6 +45,7 @@ export default function App() {
             まぜる
           </TabButton>
           <TabButton
+            id="tab-reverse"
             active={tab === 'reverse'}
             onClick={() => setTab('reverse')}
             controls="panel-reverse"
@@ -60,12 +56,17 @@ export default function App() {
       </nav>
 
       <main className="mx-auto max-w-lg px-4">
+        {/*
+          選択中のパネルだけを描画するので、非選択タブの aria-controls は
+          存在しない ID を指すことになる。それを避けるため、
+          タブ側の aria-controls は選択中のときだけ付けている。
+        */}
         {tab === 'mix' ? (
-          <div id="panel-mix" role="tabpanel">
+          <div id="panel-mix" role="tabpanel" aria-labelledby="tab-mix">
             <MixPanel selection={selection} onChange={setSelection} />
           </div>
         ) : (
-          <div id="panel-reverse" role="tabpanel">
+          <div id="panel-reverse" role="tabpanel" aria-labelledby="tab-reverse">
             <ReversePanel onTryRecipe={tryRecipe} />
           </div>
         )}
@@ -75,11 +76,13 @@ export default function App() {
 }
 
 function TabButton({
+  id,
   active,
   onClick,
   controls,
   children,
 }: {
+  id: string
   active: boolean
   onClick: () => void
   controls: string
@@ -88,9 +91,10 @@ function TabButton({
   return (
     <button
       type="button"
+      id={id}
       role="tab"
       aria-selected={active}
-      aria-controls={controls}
+      aria-controls={active ? controls : undefined}
       onClick={onClick}
       className={`min-h-11 flex-1 rounded-full text-sm font-bold transition ${
         active

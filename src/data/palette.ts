@@ -19,6 +19,12 @@ export type PaletteColor = {
    * 減法混色の原色（黄・赤紫・青緑）と白黒がこれにあたる。
    * 「作れない」ことは色の学習で一番大事な事実なので、
    * 逆引きで候補を出すより先にそう伝えるために印を付けている。
+   *
+   * 「あか」「あお」は日常の感覚では原色だが減法混色の原色ではなく、
+   * 実際に あかむらさき＋しゅいろ や あおむらさき＋あおみどり で
+   * かなり近い色が作れてしまう（reverse.test.ts で数値を固定している）。
+   * 印を付けると「つくれません」と言った直下に「そっくりな いろ」の
+   * 候補が並んで矛盾するので、ここには含めない。
    */
   primary?: true
 }
@@ -30,7 +36,7 @@ export const PALETTE: PaletteColor[] = [
   { id: 'daidai', name: 'だいだいいろ', hex: '#F08300' },
   { id: 'shu', name: 'しゅいろ', hex: '#EB6101' },
   // 赤・桃系
-  { id: 'aka', name: 'あか', hex: '#E60012', primary: true },
+  { id: 'aka', name: 'あか', hex: '#E60012' },
   { id: 'momo', name: 'ももいろ', hex: '#F8B0C0' },
   { id: 'usudaidai', name: 'うすだいだい', hex: '#FBD5B5' },
   { id: 'oudo', name: 'おうどいろ', hex: '#C7A252' },
@@ -44,7 +50,7 @@ export const PALETTE: PaletteColor[] = [
   { id: 'ai', name: 'あいいろ', hex: '#1B3B7A' },
   // 青系
   { id: 'gunjou', name: 'ぐんじょういろ', hex: '#2A3E9E' },
-  { id: 'ao', name: 'あお', hex: '#0068B7', primary: true },
+  { id: 'ao', name: 'あお', hex: '#0068B7' },
   { id: 'mizu', name: 'みずいろ', hex: '#7BC8E8' },
   { id: 'aomidori', name: 'あおみどり', hex: '#00A29A', primary: true },
   // 緑系
