@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { PaletteColor } from '../data/palette'
 import { ColorGrid } from './ColorGrid'
 
@@ -10,6 +10,9 @@ type Props = {
   onSelect: (color: PaletteColor) => void
   onClose: () => void
 }
+
+/** Tab で移動できる要素を拾うセレクタ。無効なマスは対象外にする */
+const FOCUSABLE = 'button:not([disabled]), [href], input, [tabindex="0"]'
 
 /**
  * 色を選ぶボトムシート。
@@ -23,6 +26,8 @@ export function ColorPickerSheet({
   onSelect,
   onClose,
 }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+
   // 開いている間は背後がスクロールしないようにする
   useEffect(() => {
     if (!open) return
@@ -33,10 +38,51 @@ export function ColorPickerSheet({
     }
   }, [open])
 
+  /**
+   * 開いたらシート内にフォーカスを移し、閉じたら開く前の要素へ戻す。
+   * これがないとキーボード操作で「どこを操作しているか」が分からなくなる。
+   */
+  useEffect(() => {
+    if (!open) return
+    const opener = document.activeElement as HTMLElement | null
+    // 選択中の色があればそこへ。なければシート先頭（見出し横のとじるボタン）
+    const selected = dialogRef.current?.querySelector<HTMLElement>(
+      '[aria-pressed="true"]',
+    )
+    const fallback = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE)
+    ;(selected ?? fallback)?.focus()
+    return () => opener?.focus()
+  }, [open])
+
   useEffect(() => {
     if (!open) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+
+      // aria-modal だけでは Tab が背後のタブへ抜けていくので自分で輪を閉じる
+      const items = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [],
+      )
+      if (items.length === 0) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      const active = document.activeElement
+
+      if (!e.shiftKey && active === last) {
+        e.preventDefault()
+        first.focus()
+      } else if (e.shiftKey && active === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (active instanceof Node && !dialogRef.current?.contains(active)) {
+        // 何かの拍子に外へ出ていたら引き戻す
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -46,13 +92,13 @@ export function ColorPickerSheet({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        aria-label="とじる"
+      <div
+        aria-hidden
         className="absolute inset-0 bg-stone-900/40"
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
