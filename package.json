@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "spectral.js": "^3.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
